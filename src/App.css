@@ -1,0 +1,22 @@
+
+@keyframes a-top {
+  to {
+    top: 0;
+  }
+}
+@keyframes a-bottom {
+  to {
+    bottom: 0;
+  }
+}
+@keyframes a-left {
+  to {
+    left: 0;
+  }
+}
+@keyframes a-right {
+  to {
+    right: 0;
+  }
+}
+
