@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 
@@ -10,6 +10,7 @@ function App() {
   const [box,setBox] = useState({top: 100, left: 600 })
   const [count,setCount] = useState(0)
   const [result,setResult] = useState(false)
+  const gameBoardRef = useRef(null);
   console.log(result)
 
   function randomGenerator(min, max) {
@@ -83,6 +84,38 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(event.key)) {
+        event.preventDefault(); 
+      }
+      if (event.key === 'ArrowUp' || event.key === 'w')
+        handleu();
+      else if (event.key === 'ArrowDown' || event.key === 's')
+        handled();
+      else if (event.key === 'ArrowLeft' || event.key === 'a') 
+        handlel();
+      else if (event.key === 'ArrowRight' || event.key === 'd') 
+        handler();
+      else if (event.key === 'Enter') {
+        if (!start) {
+          let arr = snk;
+          for (let index = 0; index < arr.length; index++)
+            arr[index].direction = "right";
+          setSnk([...arr]);
+          setStart(true);
+        }
+      } else if (event.key === 'r' || event.key === 'R') 
+          window.location.reload();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [snk, start, direction]); 
+
   console.log(direction)
 
   useEffect(() => {
@@ -109,6 +142,8 @@ function App() {
   useEffect(() => {
     console.log(`Time: ${time}`);
     let arr = snk
+    let gameWidth = 900;  
+    let gameHeight = 600; 
     for (let index = 0; index < arr.length; index++){
       let k = arr[index].rotation_index
       console.log("direction index is",direction[k])
@@ -131,8 +166,9 @@ function App() {
       
       if(index==0){
         let obj = arr.some(obj=>obj!=arr[0]&&obj.top==snk[0].top&&obj.left==arr[0].left)
-        if(obj||(arr[0].direction=="left"&&arr[0].left<0)||(arr[0].direction=="up"&&arr[0].top<0)||(arr[0].direction=="down"&&arr[0].top>600)||(arr[0].direction=="right"&&arr[0].left>900))
+        if(obj||(arr[0].direction=="left"&&arr[0].left<0)||(arr[0].direction=="up"&&arr[0].top<0)||(arr[0].direction=="down"&&arr[0].top >= gameHeight)||(arr[0].direction=="right"&&arr[0].left >= gameWidth)){
           setResult(true)
+        }
       }
 
       if(!result)
@@ -142,6 +178,66 @@ function App() {
   }, [time]);
 
   return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+      <h1 className="text-4xl font-bold mb-6 text-green-600">Snake Game</h1>
+
+      <div ref={gameBoardRef} className="border-4 border-black w-[900px] h-[600px] relative bg-[linear-gradient(to_right,#e5e5e5_49px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_49px,transparent_1px)] bg-[size:50px_50px] rounded-lg overflow-hidden">
+        {snk.map((item, index) => (
+          <div
+            key={index}
+            className={`absolute w-[50px] h-[50px] ${index === 0 ? 'bg-green-700' : 'bg-green-400'} border border-black rounded-md`}
+            style={{ top: `${item.top}px`, left: `${item.left}px` }}
+          ></div>
+        ))}
+        <div
+          className="border border-black absolute w-[50px] h-[50px] bg-cyan-400 rounded-md"
+          style={{ top: `${box.top}px`, left: `${box.left}px` }}
+        ></div>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-4 mt-6">
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handleu}>
+          Move Up
+        </button>
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handled}>
+          Move Down
+        </button>
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handlel}>
+          Move Left
+        </button>
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handler}>
+          Move Right
+        </button>
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+          onClick={() => {
+            if (start) return;
+            let arr = snk;
+            for (let index = 0; index < arr.length; index++) arr[index].direction = "right";
+            setSnk([...arr]);
+            setStart(true);
+          }}
+        >
+          Start Game
+        </button>
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+          onClick={() => window.location.reload()}
+        >
+          Restart
+        </button>
+      </div>
+
+      <div className="text-xl mt-4">Your Points: <span className="font-bold">{count}</span></div>
+      {result && <div className="text-3xl font-bold text-red-600 mt-4">Game Over</div>}
+    </div>
+  );
+}
+  
+export default App;
+
+/*
+return (
     <div className="flex gap-4">
       <div className="border border-black w-[80vw] h-[100vh] relative">
         {snk.map((item, index) => (
@@ -154,19 +250,19 @@ function App() {
         <div className="border border-black absolute w-[50px] h-[50px] bg-cyan-400 inline-block" style={{ top: `${box.top}px`, left: `${box.left}px` }}></div>
       </div>
       <div>
-        <button className="bg-blue-500 p-4 m-4 rounded-full" onClick={handleu}>
-          move up
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handleu}>
+          Move Up
         </button>
-        <button className="bg-blue-500 p-4 m-4 rounded-full" onClick={handled}>
-          move down
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handled}>
+          Move Down
         </button>
-        <button className="bg-blue-500 p-4 m-4 rounded-full" onClick={handlel}>
-          move left
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handlel}>
+          Move Left
         </button>
-        <button className="bg-blue-500 p-4 m-4 rounded-full" onClick={handler}>
-          move right
+        <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handler}>
+          Move Right
         </button>
-        <button className="bg-blue-500 p-4 m-4 rounded-full" onClick={()=>{
+        <button className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onClick={()=>{
           if(start)
             return
           let arr = snk;
@@ -174,12 +270,17 @@ function App() {
             arr[index].direction = "right"
           setSnk([...arr])
           setStart(true)
-        }}>start</button>
-        <div className="p-4">Your Points: {count}</div>
-        <div className="p-4">{result&&"game over"}</div>
+        }}>Start Game</button>
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+          onClick={() => window.location.reload()}
+        >
+          Restart
+        </button>
+        <div className="text-xl mt-4">Your Points: <span className="font-bold">{count}</span></div>
+        {result && <div className="text-3xl font-bold text-red-600 mt-4">Game Over</div>}
       </div>
     </div>
   );
 }
-
-export default App;
+*/
